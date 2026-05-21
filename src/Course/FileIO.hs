@@ -85,48 +85,46 @@ printFile ::
   FilePath
   -> Chars
   -> IO ()
-printFile fp cs =
-  putStrLn $ "the contents of " ++ fp ++ cs
+printFile =
+  error "todo: Course.FileIO#printFile"
 
 -- Given a list of (file name and file contents), print each.
 -- Use @printFile@.
 printFiles ::
   List (FilePath, Chars)
   -> IO ()
-printFiles fs = void $ sequence (map (\f -> printFile (fst f) (snd f)) fs)
--- printFiles = sequence . helper
---   where helper Nil = pure ()
---         helper (f:.fs) = (printFile (fst f) (snd f)) :. (printFiles fs)
+printFiles =
+  error "todo: Course.FileIO#printFiles"
 
 -- Given a file name, return (file name and file contents).
 -- Use @readFile@.
 getFile ::
   FilePath
   -> IO (FilePath, Chars)
-getFile fp =
-  (,) <$> (pure fp) <*> (readFile (filter (/= '\n') fp))
+getFile =
+  error "todo: Course.FileIO#getFile"
 
 -- Given a list of file names, return list of (file name and file contents).
 -- Use @getFile@.
 getFiles ::
   List FilePath
   -> IO (List (FilePath, Chars))
-getFiles fs =
-  sequence (map getFile fs)
+getFiles =
+  error "todo: Course.FileIO#getFiles"
 
 -- Given a file name, read it and for each line in that file, read and print contents of each.
 -- Use @getFiles@, @lines@, and @printFiles@.
 run ::
   FilePath
   -> IO ()
-run fp =
-  (getFile fp) >>= (\(_, chars) -> getFiles (lines chars)) >>= (\fs -> printFiles fs)
+run =
+  error "todo: Course.FileIO#run"
 
 -- /Tip:/ use @getArgs@ and @run@
 main ::
   IO ()
 main =
-  getArgs >>= (run . unlines)
+  error "todo: Course.FileIO#main"
 
 ----
 
