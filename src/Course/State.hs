@@ -44,8 +44,8 @@ exec ::
   State s a
   -> s
   -> s
-exec =
-  error "todo: Course.State#exec"
+exec st = snd . (runState st)
+-- let (a, s) = runState
 
 -- | Run the `State` seeded with `s` and retrieve the resulting value.
 --
@@ -54,8 +54,7 @@ eval ::
   State s a
   -> s
   -> a
-eval =
-  error "todo: Course.State#eval"
+eval st = fst . (runState st)
 
 -- | A `State` where the state also distributes into the produced value.
 --
@@ -63,8 +62,7 @@ eval =
 -- (0,0)
 get ::
   State s s
-get =
-  error "todo: Course.State#get"
+get = State (\s -> (s, s))
 
 -- | A `State` where the resulting state is seeded with the given value.
 --
@@ -73,8 +71,7 @@ get =
 put ::
   s
   -> State s ()
-put =
-  error "todo: Course.State#put"
+put s = State (\_ -> ((), s))
 
 -- | Implement the `Functor` instance for `State s`.
 --
@@ -85,8 +82,9 @@ instance Functor (State s) where
     (a -> b)
     -> State s a
     -> State s b
-  (<$>) =
-    error "todo: Course.State#(<$>)"
+  (<$>) f st = State (\x -> let (a, s) = runState st x
+                             in (f a, s)
+                     )
 
 -- | Implement the `Applicative` instance for `State s`.
 --
@@ -102,14 +100,15 @@ instance Applicative (State s) where
   pure ::
     a
     -> State s a
-  pure =
-    error "todo: Course.State pure#instance (State s)"
+  pure a = State (\s -> (a, s))
   (<*>) ::
     State s (a -> b)
     -> State s a
     -> State s b
-  (<*>) =
-    error "todo: Course.State (<*>)#instance (State s)"
+  (<*>) s1 s2 = State (\x -> let (f, s3) = runState s1 x
+                                 (a, s4) = runState s2 s3
+                              in (f a, s4)
+                      )
 
 -- | Implement the `Monad` instance for `State s`.
 --
@@ -126,8 +125,9 @@ instance Monad (State s) where
     (a -> State s b)
     -> State s a
     -> State s b
-  (=<<) =
-    error "todo: Course.State (=<<)#instance (State s)"
+  (=<<) f st = State (\x -> let (a, s) = runState st x
+                            in runState (f a) s
+                     )
 
 -- | Find the first element in a `List` that satisfies a given predicate.
 -- It is possible that no element is found, hence an `Optional` result.
@@ -148,8 +148,12 @@ findM ::
   (a -> f Bool)
   -> List a
   -> f (Optional a)
-findM =
-  error "todo: Course.State#findM"
+findM _ Nil = pure Empty
+findM f (x :. xs) = do
+                      b <- f x
+                      if b == True
+                      then pure $ Full x
+                      else findM f xs
 
 -- | Find the first element in a `List` that repeats.
 -- It is possible that no element repeats, hence an `Optional` result.
@@ -165,8 +169,9 @@ firstRepeat ::
   Ord a =>
   List a
   -> Optional a
-firstRepeat =
-  error "todo: Course.State#firstRepeat"
+firstRepeat xs = fst $
+  let p x = (\s -> (const $ pure (S.member x s)) =<< put (S.insert x s)
+            ) =<< get in runState (findM p xs) S.empty
 
 -- | Remove all duplicate elements in a `List`.
 -- /Tip:/ Use `filtering` and `State` with a @Data.Set#Set@.
@@ -178,8 +183,9 @@ distinct ::
   Ord a =>
   List a
   -> List a
-distinct =
-  error "todo: Course.State#distinct"
+distinct xs = fst $
+  let p x = (\s -> (const $ pure (not $ S.member x s)) =<< put (S.insert x s)
+            ) =<< get in runState (filtering p xs) S.empty
 
 -- | A happy number is a positive integer, where the sum of the square of its digits eventually reaches 1 after repetition.
 -- In contrast, a sad number (not a happy number) is where the sum of the square of its digits never reaches 1
@@ -205,5 +211,22 @@ distinct =
 isHappy ::
   Integer
   -> Bool
-isHappy =
-  error "todo: Course.State#isHappy"
+isHappy x = contains 1 (firstRepeat $ produce nextNum x)
+  where nextNum n = toInteger $ sum $ (map (square . digitToInt)) $ listh $ show n
+        square = join (*)
+--                 4
+--          16 =  16
+--      1 + 36 =  37
+--      9 + 49 =  58
+--     25 + 64 =  89
+--     64 + 81 = 145
+-- 1 + 16 + 25 =  42
+--     16 +  4 =  20
+--      4 +  0 =   4
+
+--                 7
+--          49 =  49
+--     16 + 81 =  97
+--     81 + 49 = 130
+-- 1 +  9 +  0 =  10
+--      1 +  0 =   1
