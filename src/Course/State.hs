@@ -212,7 +212,7 @@ isHappy ::
   Integer
   -> Bool
 isHappy x = contains 1 (firstRepeat $ produce nextNum x)
-  where nextNum n = toInteger $ sum $ (map (square . digitToInt)) $ listh $ show n
+  where nextNum = toInteger . sum . (map (square . digitToInt)) . listh . show
         square = join (*)
 --                 4
 --          16 =  16
